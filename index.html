@@ -34,10 +34,8 @@
     try { dismissed = sessionStorage.getItem('ok_gate_skip') === '1'; } catch(e) {}
 
     if (isPhone && isPortrait && !dismissed) {
-      /* Phone in portrait, not yet dismissed → show gate, wait for user */
       html.classList.add('gate-pending');
     } else {
-      /* Desktop, or phone in landscape, or already dismissed → go straight to loader */
       html.classList.add('gate-dismissed');
     }
   } catch(e) {}
@@ -556,12 +554,9 @@ ul{list-style:none}
   background:var(--fg);color:var(--bg);border-color:var(--fg);
 }
 
-/* Show gate ONLY on portrait phones (≤700px wide) */
 @media (orientation:portrait) and (pointer:coarse) and (max-width:700px){
   .rotate-gate{display:flex}
 }
-
-/* Hide gate when dismissed (JS class or checkbox state) */
 html.gate-dismissed .rotate-gate{display:none !important}
 .skip-input:checked ~ .rotate-gate{display:none !important}
 
@@ -687,7 +682,7 @@ html.gate-dismissed .rotate-gate{display:none !important}
     <section class="hero">
       <div class="hero-eyebrow">
         <span>Index</span>
-        <span>03 Links</span>
+        <span>04 Links</span>
         <span>Est. 2026</span>
       </div>
 
@@ -744,6 +739,15 @@ html.gate-dismissed .rotate-gate{display:none !important}
             <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M9 7h8v8"/></svg>
           </a>
         </li>
+
+        <li>
+          <a class="link-row" href="https://omarrkareemm.github.io/fastcut/" target="_blank" rel="noopener noreferrer" data-reveal>
+            <span class="idx">04</span>
+            <span class="title">FastCut</span>
+            <span class="meta">Motion Blur Studio</span>
+            <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M9 7h8v8"/></svg>
+          </a>
+        </li>
       </ul>
     </section>
 
@@ -794,8 +798,7 @@ html.gate-dismissed .rotate-gate{display:none !important}
   var useTrackpad = isTouch && !fine;
 
   /* ============================================================
-     LOADER — runs only after gate is dismissed (on phones).
-     On desktop it starts immediately.
+     LOADER
   ============================================================ */
   var loaderEl = document.getElementById('loader');
   var countEl  = document.getElementById('count');
@@ -831,7 +834,6 @@ html.gate-dismissed .rotate-gate{display:none !important}
       return;
     }
 
-    /* Small delay so user sees "00" for a beat before it starts */
     setTimeout(function(){
       var DURATION = 1400;
       var start = performance.now();
@@ -857,7 +859,6 @@ html.gate-dismissed .rotate-gate{display:none !important}
 
       requestAnimationFrame(step);
 
-      /* Failsafe */
       setTimeout(function(){
         if (!done){
           done = true;
@@ -874,17 +875,14 @@ html.gate-dismissed .rotate-gate{display:none !important}
   function dismissGate(){
     if (html.classList.contains('gate-dismissed')) return;
 
-    /* Persist for this session so gate never shows again */
     try { sessionStorage.setItem('ok_gate_skip', '1'); } catch(e) {}
 
     html.classList.remove('gate-pending');
     html.classList.add('gate-dismissed');
 
-    /* Now start the loader */
     startLoader();
   }
 
-  /* Continue anyway (label click toggles checkbox AND triggers dismissal) */
   var skipBtn = document.getElementById('skipButton');
   if (skipBtn){
     skipBtn.addEventListener('click', function(){
@@ -892,7 +890,6 @@ html.gate-dismissed .rotate-gate{display:none !important}
     });
   }
 
-  /* Orientation change — dismiss gate if user rotates to landscape */
   function checkOrientation(){
     if (!html.classList.contains('gate-pending')) return;
     var isPortrait = false;
@@ -913,7 +910,6 @@ html.gate-dismissed .rotate-gate{display:none !important}
     orientTimer = setTimeout(checkOrientation, 200);
   });
 
-  /* If gate is not pending → start loader immediately */
   if (!html.classList.contains('gate-pending')){
     startLoader();
   }
@@ -1157,11 +1153,7 @@ html.gate-dismissed .rotate-gate{display:none !important}
     place(); clamp();
   });
 
-  /* ============================================================
-     ULTIMATE FAILSAFE
-     Only fires if the loader was actually started but never finished.
-     If gate is still pending, it stays pending — no auto-unlock.
-  ============================================================ */
+  /* ULTIMATE FAILSAFE */
   setTimeout(function(){
     if (loaderStarted && !loaderFinished) finishLoader();
   }, 5000);

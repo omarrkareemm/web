@@ -15,33 +15,6 @@
 
 <script>document.documentElement.className += ' js';</script>
 
-<!-- ============================================================
-     EARLY STATE SETUP — runs before body renders.
-     Decides: wait for gate, or start loader right away.
-============================================================ -->
-<script>
-(function(){
-  try {
-    var html = document.documentElement;
-    var isPhone = window.matchMedia('(pointer:coarse)').matches;
-    var isPortrait = false;
-    try {
-      isPortrait = window.matchMedia('(orientation:portrait)').matches;
-    } catch(e) {
-      isPortrait = window.innerHeight > window.innerWidth;
-    }
-    var dismissed = false;
-    try { dismissed = sessionStorage.getItem('ok_gate_skip') === '1'; } catch(e) {}
-
-    if (isPhone && isPortrait && !dismissed) {
-      html.classList.add('gate-pending');
-    } else {
-      html.classList.add('gate-dismissed');
-    }
-  } catch(e) {}
-})();
-</script>
-
 <style>
 /* ============ RESET ============ */
 *,*::before,*::after{box-sizing:border-box}
@@ -553,11 +526,9 @@ ul{list-style:none}
 .rotate-gate__skip:active{
   background:var(--fg);color:var(--bg);border-color:var(--fg);
 }
-
-@media (orientation:portrait) and (pointer:coarse) and (max-width:700px){
+@media (orientation:portrait) and (pointer:coarse){
   .rotate-gate{display:flex}
 }
-html.gate-dismissed .rotate-gate{display:none !important}
 .skip-input:checked ~ .rotate-gate{display:none !important}
 
 /* ============ FOCUS & RESPONSIVE ============ */
@@ -593,17 +564,15 @@ html.gate-dismissed .rotate-gate{display:none !important}
   .word{transform:none !important}
   .topbar{opacity:1 !important;transform:none !important}
   .trackpad,.trackpad-mini,.vptr{display:none !important}
-  body.loading{overflow:auto !important}
 </style>
 </noscript>
 </head>
 
 <body class="loading">
 
-  <!-- Checkbox for no-JS gate dismissal fallback -->
   <input type="checkbox" id="skipGate" class="skip-input" aria-hidden="true">
 
-  <!-- ============ ROTATE GATE ============ -->
+  <!-- ROTATE GATE -->
   <div class="rotate-gate" role="dialog" aria-label="Rotate your device">
     <span class="rotate-gate__label">Orientation Required</span>
     <div class="rotate-gate__phone" aria-hidden="true">
@@ -619,10 +588,10 @@ html.gate-dismissed .rotate-gate{display:none !important}
       If your phone won't rotate,<br>
       swipe down Control Center and turn off Rotation Lock
     </p>
-    <label for="skipGate" class="rotate-gate__skip" id="skipButton">Continue anyway →</label>
+    <label for="skipGate" class="rotate-gate__skip">Continue anyway →</label>
   </div>
 
-  <!-- ============ LOADER ============ -->
+  <!-- LOADER -->
   <div class="loader" id="loader">
     <div class="loader-top">
       <span>Omar Kareem</span>
@@ -668,7 +637,7 @@ html.gate-dismissed .rotate-gate{display:none !important}
   <header class="topbar">
     <div class="topbar-left">
       <span class="dot" aria-hidden="true"></span>
-      <span>UNAVAILIBLE FOR WORK</span>
+      <span>UNAVAILABLE FOR WORK</span>
     </div>
     <div class="topbar-right">
       <span id="clock">--:--:--</span>
@@ -677,12 +646,13 @@ html.gate-dismissed .rotate-gate{display:none !important}
     </div>
   </header>
 
+  <!-- MAIN -->
   <main class="page">
 
     <section class="hero">
       <div class="hero-eyebrow">
         <span>Index</span>
-        <span>04 Links</span>
+        <span>03 Links</span>
         <span>Est. 2026</span>
       </div>
 
@@ -697,12 +667,13 @@ html.gate-dismissed .rotate-gate{display:none !important}
       </p>
     </section>
 
+    <!-- TOP MARQUEE -->
     <div class="marquee" aria-hidden="true">
       <div class="marquee-track">
-        <span class="marquee-item">Omar Kareem <b>✦</b> UNAVAILIBLE TO WORK <b>✦</b> Port Said, Egypt <b>✦</b> Student <b>✦</b> Designer <b>✦</b> AI Enthusiast <b>✦</b> </span>
-        <span class="marquee-item">Omar Kareem <b>✦</b> UNAVAILIBLE TO WORK <b>✦</b> Port Said, Egypt <b>✦</b> Student <b>✦</b> Designer <b>✦</b> AI Enthusiast <b>✦</b> </span>
-        <span class="marquee-item">Omar Kareem <b>✦</b> UNAVAILIBLE TO WORK <b>✦</b> Port Said, Egypt <b>✦</b> Student <b>✦</b> Designer <b>✦</b> AI Enthusiast <b>✦</b> </span>
-        <span class="marquee-item">Omar Kareem <b>✦</b> UNAVAILIBLE TO WORK <b>✦</b> Port Said, Egypt <b>✦</b> Student <b>✦</b> Designer <b>✦</b> AI Enthusiast <b>✦</b> </span>
+        <span class="marquee-item">Omar Kareem <b>✦</b> UNAVAILABLE TO WORK <b>✦</b> Port Said, Egypt <b>✦</b> Student <b>✦</b> Designer <b>✦</b> AI Enthusiast <b>✦</b> </span>
+        <span class="marquee-item">Omar Kareem <b>✦</b> UNAVAILABLE TO WORK <b>✦</b> Port Said, Egypt <b>✦</b> Student <b>✦</b> Designer <b>✦</b> AI Enthusiast <b>✦</b> </span>
+        <span class="marquee-item">Omar Kareem <b>✦</b> UNAVAILABLE TO WORK <b>✦</b> Port Said, Egypt <b>✦</b> Student <b>✦</b> Designer <b>✦</b> AI Enthusiast <b>✦</b> </span>
+        <span class="marquee-item">Omar Kareem <b>✦</b> UNAVAILABLE TO WORK <b>✦</b> Port Said, Egypt <b>✦</b> Student <b>✦</b> Designer <b>✦</b> AI Enthusiast <b>✦</b> </span>
       </div>
     </div>
 
@@ -739,15 +710,6 @@ html.gate-dismissed .rotate-gate{display:none !important}
             <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M9 7h8v8"/></svg>
           </a>
         </li>
-
-        <li>
-          <a class="link-row" href="https://omarrkareemm.github.io/fastcut/" target="_blank" rel="noopener noreferrer" data-reveal>
-            <span class="idx">04</span>
-            <span class="title">FastCut</span>
-            <span class="meta">Motion Blur Studio</span>
-            <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M9 7h8v8"/></svg>
-          </a>
-        </li>
       </ul>
     </section>
 
@@ -767,6 +729,7 @@ html.gate-dismissed .rotate-gate{display:none !important}
       </div>
     </footer>
 
+    <!-- BOTTOM NAME MARQUEE -->
     <div class="marquee marquee--name" aria-hidden="true">
       <div class="marquee-track">
         <span class="marquee-item">Omar Kareem</span>
@@ -778,17 +741,11 @@ html.gate-dismissed .rotate-gate{display:none !important}
 
   </main>
 
-<!-- ============================================================
-     MAIN SCRIPT
-============================================================ -->
 <script>
 (function(){
   'use strict';
 
   function safe(fn){ try { fn(); } catch(e){ if (window.console) console.log('[site]', e); } }
-
-  var html   = document.documentElement;
-  var bodyEl = document.body;
 
   var fine = false, isTouch = false;
   try {
@@ -800,17 +757,14 @@ html.gate-dismissed .rotate-gate{display:none !important}
   /* ============================================================
      LOADER
   ============================================================ */
-  var loaderEl = document.getElementById('loader');
-  var countEl  = document.getElementById('count');
-  var barEl    = document.getElementById('bar');
-  var loaderStarted  = false;
-  var loaderFinished = false;
+  var loader  = document.getElementById('loader');
+  var countEl = document.getElementById('count');
+  var barEl   = document.getElementById('bar');
+  var bodyEl  = document.body;
 
-  function finishLoader(){
-    if (loaderFinished) return;
-    loaderFinished = true;
+  function finishLoad(){
     try {
-      if (loaderEl) loaderEl.className += ' done';
+      if (loader) loader.className += ' done';
       setTimeout(function(){
         bodyEl.className = bodyEl.className
           .replace(/\bloading\b/g, '')
@@ -818,113 +772,59 @@ html.gate-dismissed .rotate-gate{display:none !important}
           .replace(/^\s+|\s+$/g, '') + ' is-loaded';
       }, 280);
       setTimeout(function(){
-        if (loaderEl && loaderEl.parentNode) loaderEl.parentNode.removeChild(loaderEl);
+        if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
       }, 1500);
     } catch(e){
       try { bodyEl.className = 'is-loaded'; } catch(e2){}
     }
   }
 
-  function startLoader(){
-    if (loaderStarted) return;
-    loaderStarted = true;
+  safe(function(){
+    if (!countEl || !barEl) { setTimeout(finishLoad, 400); return; }
 
-    if (!countEl || !barEl){
-      setTimeout(finishLoader, 400);
-      return;
+    var DURATION = 1400;
+    var start = performance.now();
+    var done = false;
+
+    function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
+
+    function step(now){
+      if (done) return;
+      var p = Math.min((now - start) / DURATION, 1);
+      var e = easeOutCubic(p);
+      var n = Math.round(e * 100);
+
+      try {
+        countEl.textContent = (n < 10 ? '0' : '') + n;
+        barEl.style.transform = 'scaleX(' + e + ')';
+      } catch(err){}
+
+      if (p < 1) {
+        requestAnimationFrame(step);
+      } else {
+        done = true;
+        setTimeout(finishLoad, 200);
+      }
     }
+
+    requestAnimationFrame(step);
 
     setTimeout(function(){
-      var DURATION = 1400;
-      var start = performance.now();
-      var done = false;
-
-      function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
-
-      function step(now){
-        if (done) return;
-        var p = Math.min((now - start) / DURATION, 1);
-        var e = easeOutCubic(p);
-        var n = Math.round(e * 100);
-        try {
-          countEl.textContent = (n < 10 ? '0' : '') + n;
-          barEl.style.transform = 'scaleX(' + e + ')';
-        } catch(err){}
-        if (p < 1) requestAnimationFrame(step);
-        else {
-          done = true;
-          setTimeout(finishLoader, 220);
-        }
+      if (!done) {
+        done = true;
+        try { countEl.textContent = '100'; barEl.style.transform = 'scaleX(1)'; } catch(e){}
+        finishLoad();
       }
-
-      requestAnimationFrame(step);
-
-      setTimeout(function(){
-        if (!done){
-          done = true;
-          try { countEl.textContent = '100'; barEl.style.transform = 'scaleX(1)'; } catch(e){}
-          finishLoader();
-        }
-      }, 3500);
-    }, 150);
-  }
-
-  /* ============================================================
-     GATE DISMISSAL
-  ============================================================ */
-  function dismissGate(){
-    if (html.classList.contains('gate-dismissed')) return;
-
-    try { sessionStorage.setItem('ok_gate_skip', '1'); } catch(e) {}
-
-    html.classList.remove('gate-pending');
-    html.classList.add('gate-dismissed');
-
-    startLoader();
-  }
-
-  var skipBtn = document.getElementById('skipButton');
-  if (skipBtn){
-    skipBtn.addEventListener('click', function(){
-      dismissGate();
-    });
-  }
-
-  function checkOrientation(){
-    if (!html.classList.contains('gate-pending')) return;
-    var isPortrait = false;
-    try {
-      isPortrait = window.matchMedia('(orientation:portrait)').matches;
-    } catch(e){
-      isPortrait = window.innerHeight > window.innerWidth;
-    }
-    if (!isPortrait) dismissGate();
-  }
-
-  window.addEventListener('orientationchange', function(){
-    setTimeout(checkOrientation, 300);
-  });
-  var orientTimer;
-  window.addEventListener('resize', function(){
-    clearTimeout(orientTimer);
-    orientTimer = setTimeout(checkOrientation, 200);
+    }, 3500);
   });
 
-  if (!html.classList.contains('gate-pending')){
-    startLoader();
-  }
-
-  /* ============================================================
-     YEAR
-  ============================================================ */
+  /* YEAR */
   safe(function(){
     var y = document.getElementById('year');
     if (y) y.textContent = new Date().getFullYear();
   });
 
-  /* ============================================================
-     CLOCK — Port Said
-  ============================================================ */
+  /* CLOCK */
   safe(function(){
     var el = document.getElementById('clock');
     if (!el) return;
@@ -946,9 +846,7 @@ html.gate-dismissed .rotate-gate{display:none !important}
     setInterval(tick, 1000);
   });
 
-  /* ============================================================
-     SCROLL REVEAL
-  ============================================================ */
+  /* SCROLL REVEAL */
   safe(function(){
     var els = document.querySelectorAll('[data-reveal]');
     var i;
@@ -970,9 +868,7 @@ html.gate-dismissed .rotate-gate{display:none !important}
     }
   });
 
-  /* ============================================================
-     DESKTOP: CURSOR + SPOTLIGHT + HERO PARALLAX
-  ============================================================ */
+  /* DESKTOP: CURSOR + SPOTLIGHT + PARALLAX */
   safe(function(){
     if (!fine) return;
     var c = document.querySelector('.cursor');
@@ -1028,9 +924,7 @@ html.gate-dismissed .rotate-gate{display:none !important}
     });
   });
 
-  /* ============================================================
-     VIRTUAL TRACKPAD — mobile only
-  ============================================================ */
+  /* VIRTUAL TRACKPAD */
   safe(function(){
     if (!useTrackpad) return;
 
@@ -1153,10 +1047,17 @@ html.gate-dismissed .rotate-gate{display:none !important}
     place(); clamp();
   });
 
-  /* ULTIMATE FAILSAFE */
+  /* FAILSAFE */
   setTimeout(function(){
-    if (loaderStarted && !loaderFinished) finishLoader();
-  }, 5000);
+    if (bodyEl.className.indexOf('is-loaded') === -1){
+      bodyEl.className = bodyEl.className
+        .replace(/\bloading\b/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/^\s+|\s+$/g, '') + ' is-loaded';
+      var l = document.getElementById('loader');
+      if (l && l.parentNode) l.parentNode.removeChild(l);
+    }
+  }, 4000);
 
 })();
 </script>

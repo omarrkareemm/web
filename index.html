@@ -15,6 +15,35 @@
 
 <script>document.documentElement.className += ' js';</script>
 
+<!-- ============================================================
+     EARLY STATE SETUP — runs before body renders.
+     Decides: wait for gate, or start loader right away.
+============================================================ -->
+<script>
+(function(){
+  try {
+    var html = document.documentElement;
+    var isPhone = window.matchMedia('(pointer:coarse)').matches;
+    var isPortrait = false;
+    try {
+      isPortrait = window.matchMedia('(orientation:portrait)').matches;
+    } catch(e) {
+      isPortrait = window.innerHeight > window.innerWidth;
+    }
+    var dismissed = false;
+    try { dismissed = sessionStorage.getItem('ok_gate_skip') === '1'; } catch(e) {}
+
+    if (isPhone && isPortrait && !dismissed) {
+      /* Phone in portrait, not yet dismissed → show gate, wait for user */
+      html.classList.add('gate-pending');
+    } else {
+      /* Desktop, or phone in landscape, or already dismissed → go straight to loader */
+      html.classList.add('gate-dismissed');
+    }
+  } catch(e) {}
+})();
+</script>
+
 <style>
 /* ============ RESET ============ */
 *,*::before,*::after{box-sizing:border-box}
@@ -83,7 +112,7 @@ ul{list-style:none}
 .cursor.grow .cursor-dot{width:66px;height:66px;background:transparent}
 @media (hover:none),(pointer:coarse){.cursor,.spotlight{display:none}}
 
-/* ============ LOADER — JS-driven counter, CSS fallback ============ */
+/* ============ LOADER ============ */
 .loader{
   position:fixed;inset:0;z-index:2000;background:var(--bg);
   display:flex;flex-direction:column;justify-content:space-between;
@@ -526,9 +555,14 @@ ul{list-style:none}
 .rotate-gate__skip:active{
   background:var(--fg);color:var(--bg);border-color:var(--fg);
 }
-@media (orientation:portrait) and (pointer:coarse){
+
+/* Show gate ONLY on portrait phones (≤700px wide) */
+@media (orientation:portrait) and (pointer:coarse) and (max-width:700px){
   .rotate-gate{display:flex}
 }
+
+/* Hide gate when dismissed (JS class or checkbox state) */
+html.gate-dismissed .rotate-gate{display:none !important}
 .skip-input:checked ~ .rotate-gate{display:none !important}
 
 /* ============ FOCUS & RESPONSIVE ============ */
@@ -557,7 +591,6 @@ ul{list-style:none}
 }
 </style>
 
-<!-- Fallback if JavaScript is blocked -->
 <noscript>
 <style>
   .loader{display:none !important}
@@ -565,16 +598,17 @@ ul{list-style:none}
   .word{transform:none !important}
   .topbar{opacity:1 !important;transform:none !important}
   .trackpad,.trackpad-mini,.vptr{display:none !important}
+  body.loading{overflow:auto !important}
 </style>
 </noscript>
 </head>
 
 <body class="loading">
 
-  <!-- Hidden checkbox for rotate gate skip -->
+  <!-- Checkbox for no-JS gate dismissal fallback -->
   <input type="checkbox" id="skipGate" class="skip-input" aria-hidden="true">
 
-  <!-- ROTATE GATE -->
+  <!-- ============ ROTATE GATE ============ -->
   <div class="rotate-gate" role="dialog" aria-label="Rotate your device">
     <span class="rotate-gate__label">Orientation Required</span>
     <div class="rotate-gate__phone" aria-hidden="true">
@@ -590,10 +624,10 @@ ul{list-style:none}
       If your phone won't rotate,<br>
       swipe down Control Center and turn off Rotation Lock
     </p>
-    <label for="skipGate" class="rotate-gate__skip">Continue anyway →</label>
+    <label for="skipGate" class="rotate-gate__skip" id="skipButton">Continue anyway →</label>
   </div>
 
-  <!-- LOADER -->
+  <!-- ============ LOADER ============ -->
   <div class="loader" id="loader">
     <div class="loader-top">
       <span>Omar Kareem</span>
@@ -648,7 +682,6 @@ ul{list-style:none}
     </div>
   </header>
 
-  <!-- MAIN -->
   <main class="page">
 
     <section class="hero">
@@ -669,7 +702,6 @@ ul{list-style:none}
       </p>
     </section>
 
-    <!-- TOP MARQUEE -->
     <div class="marquee" aria-hidden="true">
       <div class="marquee-track">
         <span class="marquee-item">Omar Kareem <b>✦</b> UNAVAILIBLE TO WORK <b>✦</b> Port Said, Egypt <b>✦</b> Student <b>✦</b> Designer <b>✦</b> AI Enthusiast <b>✦</b> </span>
@@ -731,7 +763,6 @@ ul{list-style:none}
       </div>
     </footer>
 
-    <!-- BOTTOM NAME MARQUEE -->
     <div class="marquee marquee--name" aria-hidden="true">
       <div class="marquee-track">
         <span class="marquee-item">Omar Kareem</span>
@@ -752,6 +783,9 @@ ul{list-style:none}
 
   function safe(fn){ try { fn(); } catch(e){ if (window.console) console.log('[site]', e); } }
 
+  var html   = document.documentElement;
+  var bodyEl = document.body;
+
   var fine = false, isTouch = false;
   try {
     fine    = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
@@ -760,16 +794,20 @@ ul{list-style:none}
   var useTrackpad = isTouch && !fine;
 
   /* ============================================================
-     LOADER — JS-driven counter (00 → 100)
+     LOADER — runs only after gate is dismissed (on phones).
+     On desktop it starts immediately.
   ============================================================ */
-  var loader  = document.getElementById('loader');
-  var countEl = document.getElementById('count');
-  var barEl   = document.getElementById('bar');
-  var bodyEl  = document.body;
+  var loaderEl = document.getElementById('loader');
+  var countEl  = document.getElementById('count');
+  var barEl    = document.getElementById('bar');
+  var loaderStarted  = false;
+  var loaderFinished = false;
 
-  function finishLoad(){
+  function finishLoader(){
+    if (loaderFinished) return;
+    loaderFinished = true;
     try {
-      if (loader) loader.className += ' done';
+      if (loaderEl) loaderEl.className += ' done';
       setTimeout(function(){
         bodyEl.className = bodyEl.className
           .replace(/\bloading\b/g, '')
@@ -777,56 +815,108 @@ ul{list-style:none}
           .replace(/^\s+|\s+$/g, '') + ' is-loaded';
       }, 280);
       setTimeout(function(){
-        if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
+        if (loaderEl && loaderEl.parentNode) loaderEl.parentNode.removeChild(loaderEl);
       }, 1500);
     } catch(e){
       try { bodyEl.className = 'is-loaded'; } catch(e2){}
     }
   }
 
-  safe(function(){
-    if (!countEl || !barEl) {
-      // Elements missing — just finish
-      setTimeout(finishLoad, 400);
+  function startLoader(){
+    if (loaderStarted) return;
+    loaderStarted = true;
+
+    if (!countEl || !barEl){
+      setTimeout(finishLoader, 400);
       return;
     }
 
-    var DURATION = 1400;  /* slightly longer than v1 so counter reads clearly */
-    var start = performance.now();
-    var done = false;
-
-    function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
-
-    function step(now){
-      if (done) return;
-      var p = Math.min((now - start) / DURATION, 1);
-      var e = easeOutCubic(p);
-      var n = Math.round(e * 100);
-
-      try {
-        countEl.textContent = (n < 10 ? '0' : '') + n;
-        barEl.style.transform = 'scaleX(' + e + ')';
-      } catch(err){}
-
-      if (p < 1) {
-        requestAnimationFrame(step);
-      } else {
-        done = true;
-        setTimeout(finishLoad, 200);
-      }
-    }
-
-    requestAnimationFrame(step);
-
-    /* HARD FAILSAFE — if RAF never completes for any reason */
+    /* Small delay so user sees "00" for a beat before it starts */
     setTimeout(function(){
-      if (!done) {
-        done = true;
-        try { countEl.textContent = '100'; barEl.style.transform = 'scaleX(1)'; } catch(e){}
-        finishLoad();
+      var DURATION = 1400;
+      var start = performance.now();
+      var done = false;
+
+      function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
+
+      function step(now){
+        if (done) return;
+        var p = Math.min((now - start) / DURATION, 1);
+        var e = easeOutCubic(p);
+        var n = Math.round(e * 100);
+        try {
+          countEl.textContent = (n < 10 ? '0' : '') + n;
+          barEl.style.transform = 'scaleX(' + e + ')';
+        } catch(err){}
+        if (p < 1) requestAnimationFrame(step);
+        else {
+          done = true;
+          setTimeout(finishLoader, 220);
+        }
       }
-    }, 3500);
+
+      requestAnimationFrame(step);
+
+      /* Failsafe */
+      setTimeout(function(){
+        if (!done){
+          done = true;
+          try { countEl.textContent = '100'; barEl.style.transform = 'scaleX(1)'; } catch(e){}
+          finishLoader();
+        }
+      }, 3500);
+    }, 150);
+  }
+
+  /* ============================================================
+     GATE DISMISSAL
+  ============================================================ */
+  function dismissGate(){
+    if (html.classList.contains('gate-dismissed')) return;
+
+    /* Persist for this session so gate never shows again */
+    try { sessionStorage.setItem('ok_gate_skip', '1'); } catch(e) {}
+
+    html.classList.remove('gate-pending');
+    html.classList.add('gate-dismissed');
+
+    /* Now start the loader */
+    startLoader();
+  }
+
+  /* Continue anyway (label click toggles checkbox AND triggers dismissal) */
+  var skipBtn = document.getElementById('skipButton');
+  if (skipBtn){
+    skipBtn.addEventListener('click', function(){
+      dismissGate();
+    });
+  }
+
+  /* Orientation change — dismiss gate if user rotates to landscape */
+  function checkOrientation(){
+    if (!html.classList.contains('gate-pending')) return;
+    var isPortrait = false;
+    try {
+      isPortrait = window.matchMedia('(orientation:portrait)').matches;
+    } catch(e){
+      isPortrait = window.innerHeight > window.innerWidth;
+    }
+    if (!isPortrait) dismissGate();
+  }
+
+  window.addEventListener('orientationchange', function(){
+    setTimeout(checkOrientation, 300);
   });
+  var orientTimer;
+  window.addEventListener('resize', function(){
+    clearTimeout(orientTimer);
+    orientTimer = setTimeout(checkOrientation, 200);
+  });
+
+  /* If gate is not pending → start loader immediately */
+  if (!html.classList.contains('gate-pending')){
+    startLoader();
+  }
 
   /* ============================================================
      YEAR
@@ -861,7 +951,7 @@ ul{list-style:none}
   });
 
   /* ============================================================
-     SCROLL REVEAL — elements fade in top-to-bottom as you scroll
+     SCROLL REVEAL
   ============================================================ */
   safe(function(){
     var els = document.querySelectorAll('[data-reveal]');
@@ -1067,17 +1157,14 @@ ul{list-style:none}
     place(); clamp();
   });
 
-  /* ULTIMATE FAILSAFE: if body is still loading after 4s, force unlock */
+  /* ============================================================
+     ULTIMATE FAILSAFE
+     Only fires if the loader was actually started but never finished.
+     If gate is still pending, it stays pending — no auto-unlock.
+  ============================================================ */
   setTimeout(function(){
-    if (bodyEl.className.indexOf('is-loaded') === -1){
-      bodyEl.className = bodyEl.className
-        .replace(/\bloading\b/g, '')
-        .replace(/\s+/g, ' ')
-        .replace(/^\s+|\s+$/g, '') + ' is-loaded';
-      var l = document.getElementById('loader');
-      if (l && l.parentNode) l.parentNode.removeChild(l);
-    }
-  }, 4000);
+    if (loaderStarted && !loaderFinished) finishLoader();
+  }, 5000);
 
 })();
 </script>
